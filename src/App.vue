@@ -80,7 +80,7 @@
                 >Composición de Cartera</router-link
               >
             </li>
-            <li>
+            <!-- <li>
               <router-link class="dropdown-item" to="./py/participes"
                 >Cantidad de Partícipes</router-link
               >
@@ -94,7 +94,7 @@
               <router-link class="dropdown-item" to="./py/valorizacion"
                 >Valorización</router-link
               >
-            </li>
+            </li> -->
           </ul>
         </li>
         <li class="nav-item">
