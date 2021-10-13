@@ -64,27 +64,7 @@
           </div>
         </div>
       </div>
-      <div class="col-sm-6">
-        <div class="card">
-          <h5 class="card-header">Ejemplos</h5>
-          <div class="card-body">
-            <h5 class="card-title">Normativo Paraguay</h5>
-            <p class="card-text">
-              En esta sección encontrará ejemplos de consulta de la normativa de
-              Paraguay
-            </p>
-            <router-link to="./py/cartera" class="card-link"
-              >Composición de Cartera</router-link
-            >
-            <!-- <a href="./py/cartera" class="card-link">Composición de Cartera</a> -->
-          </div>
-        </div>
-      </div>
-    </div>
-  </div>
-  <br />
-  <div class="container">
-    <div class="row">
+
       <div class="col-sm-6">
         <div class="card">
           <h5 class="card-header">Ejemplos</h5>
@@ -104,17 +84,6 @@
           </div>
         </div>
       </div>
-      <!-- <div class="col-sm-6">
-                <div class="card">
-                    <h5 class="card-header">Ejemplos</h5>
-                    <div class="card-body">
-                        <h5 class="card-title">Ingreso de Inversiones</h5>
-                        <p class="card-text">Visite el sandbox de nuestra API para poder comprender toda su funcionalidad</p>
-                        <a href="#" class="card-link">Card link</a>
-                        <a href="#" class="card-link">Another link</a>
-                    </div>
-                </div>
-            </div> -->
     </div>
   </div>
 </template>
