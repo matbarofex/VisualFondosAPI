@@ -5,27 +5,18 @@
       class="g-3 needs-validation"
       v-on:submit.prevent="insertSuscripcion"
       method="post"
+      ref="formSol"
     >
-      <div class="input-group mb-3">
-        <span class="input-group-text">Cuotapartista</span>
-
-        <select v-model="cuentaSeleccionada" class="form-select" required>
-          <option
-            v-for="cuenta in cuentas"
-            :key="cuenta.numero"
-            :value="cuenta.numero"
-            >Cuenta {{ cuenta.numero }}</option
-          >
-        </select>
-      </div>
       <div class="input-group mb-3">
         <span class="input-group-text">Fondo</span>
         <select
-          v-model="fondoSeleccionado"
           class="form-select"
           required
           v-on:change="getMoneda($event)"
+          name="sFondo"
+          ref="sFondo"
         >
+          <option>Seleccione un fondo</option>
           <option
             v-for="fondo in fondos"
             :key="
@@ -48,6 +39,50 @@
       </div>
 
       <div class="input-group mb-3">
+        <span class="input-group-text">Cuotapartista</span>
+
+        <select
+          v-model="suscripcion.numCuotapartista"
+          class="form-select"
+          v-on:change="getCuentaBancaria($event)"
+          required
+          name="sCuotapartista"
+          ref="sCuotapartista"
+        >
+          <option value="0" selected="selected"
+            >Seleccione una cuenta cuotapartista</option
+          >
+          <option
+            v-for="cuenta in cuentas"
+            :key="cuenta.numero"
+            :value="cuenta.numero"
+            >Cuenta {{ cuenta.numero }}</option
+          >
+        </select>
+      </div>
+      <div class="input-group mb-3">
+        <span class="input-group-text">Cuenta Bancaria</span>
+
+        <select
+          v-model="suscripcion.idCuentaBancariaCpt"
+          class="form-select"
+          required
+          name="sCuentaBancaria"
+          ref="sCuentaBancaria"
+        >
+          <option value="0" selected="selected"
+            >Seleccione una cuenta bancaria</option
+          >
+          <option
+            v-for="cuenta in cuentasBancarias"
+            :key="cuenta[0]"
+            :value="cuenta[0]"
+            >{{ cuenta[2] }} {{ cuenta[1] }}</option
+          >
+        </select>
+      </div>
+
+      <div class="input-group mb-3">
         <span class="input-group-text">{{ moneda }}</span>
 
         <input
@@ -56,6 +91,7 @@
           id="validationCustom05"
           min="1"
           required
+          v-model="suscripcion.importe"
         />
       </div>
 
@@ -68,11 +104,18 @@
 
 <script>
 import axios from "axios";
+import moment from "moment";
+
+const headersv2 = {
+  accept: "application/json;odata.metadata=minimal;odata.streaming=true",
+  "Content-Type": "application/json;",
+  "api-version": "2",
+};
 
 const headers = {
   accept: "application/json;odata.metadata=minimal;odata.streaming=true",
   "Content-Type": "application/json;",
-  "api-version": "2",
+  "api-version": "3",
 };
 
 const apiURL = "http://192.168.22.14:6003/api/fondos/v3";
@@ -85,12 +128,17 @@ export default {
   data: function() {
     return {
       suscripcion: {
-        
+        numFondo: 0,
+        numCuotapartista: 0,
+        clase: "",
+        fechaConcertacion: "",
+        importe: 0,
+        idSolicitud: "",
+        idCuentaBancariaCpt: "",
       },
       cuentas: [],
+      cuentasBancarias: [],
       fondos: [],
-      cuentaSeleccionada: 0,
-      fondoSeleccionado: 0,
       moneda: "",
     };
   },
@@ -99,49 +147,91 @@ export default {
       const response = await fetch(
         apiURLv2 +
           "/reportes/posicionCuotapartista?fecha=2021-10-15&pageSize=150",
-        { headers }
+        { headers: headersv2 }
       );
       const data = await response.json();
 
       data.data.forEach((cuenta) => {
         this.cuentas.push(cuenta.cuotapartista);
       });
-
-      // console.log(this.cuentas);
+    },
+    async getCuentaBancaria(cuotapartista) {
+      this.cuentasBancarias = [];
+      const response = await fetch(
+        apiURL +
+          "/get-cuotapartistas?numCuotapartista=" +
+          cuotapartista.target.value,
+        { headers }
+      );
+      const data = await response.json();
+      // this.cuentasBancarias = data.data[0].cuentasBancarias;
+      data.data[0].cuentasBancarias.forEach((cuenta) => {
+        if (cuenta.moneda.codISO === "ARS") {
+          this.cuentasBancarias.push([
+            cuenta.idCptCuentaBancaria,
+            cuenta.numeroCuenta,
+            cuenta.moneda.codISO,
+          ]);
+        }
+      });
     },
     async getFondos() {
       const response = await fetch(
         apiURLv2 + "/reportes/valorCuotapartes?fecha=2015-10-10&pageSize=50",
-        { headers }
+        { headers: headersv2 }
       );
       const data = await response.json();
 
       data.data.forEach((fondo) => {
-        const fondoClase = [];
-        fondoClase;
         this.fondos.push([
           fondo.fondo,
           fondo.tipoValorCuotaparte,
           fondo.moneda,
         ]);
       });
-
-      // console.log(this.fondos);
+      console.log(this.$refs.sCuentaBancaria);
+      this.$refs.sFondo.selected = 0;
+      this.$refs.sCuotapartista.selected = 0;
+      this.$refs.sCuentaBancaria.selected = 0;
     },
     async getMoneda(event) {
       const fondoClase = event.target.value.split("_");
 
-      console.log(fondoClase);
       this.moneda = fondoClase[2];
+      this.suscripcion.numFondo = fondoClase[0];
+      this.suscripcion.clase = fondoClase[1];
+      this.suscripcion.idSolicitud = String(Math.random()).replace(
+        "0.",
+        "TEST"
+      );
+      this.suscripcion.fechaConcertacion = "2021-10-13";
     },
-    insertSuscripcion() {
+    insertSuscripcion(event) {
+      const headerPost = {
+        "api-version": "3",
+        "Content-Type":
+          "application/json;odata.metadata=minimal;odata.streaming=true",
+        accept: "application/json;odata.metadata=minimal;odata.streaming=true",
+      };
+      console.log(this.suscripcion);
+
       axios
-        .post(apiURL + "/insert-solicitud-suscripcion", this.form)
+        .post(apiURL + "/insert-solicitud-suscripcion", this.suscripcion, {
+          headers: headerPost,
+        })
         .then((res) => {
-          //Perform Success Action
+          console.log(res);
+          alert(
+            "La solicitud " + res.data.codigo + " se ingresó satisfactoriamente"
+          );
+          this.$refs.formSol.reset();
+          event.target.reset();
+          this.sFondo.selected = undefined;
+          this.sCuotapartista.selected = undefined;
+          this.sCuentaBancaria.selected = undefined;
         })
         .catch((error) => {
-          // error.response.status Check status code
+          console.log(error.response);
         })
         .finally(() => {
           //Perform action in always
@@ -149,8 +239,8 @@ export default {
     },
   },
   created() {
-    this.getFondos();
     this.getCuentas();
+    this.getFondos();
   },
 };
 </script>
