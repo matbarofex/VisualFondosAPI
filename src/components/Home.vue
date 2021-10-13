@@ -48,10 +48,19 @@
           <div class="card-body">
             <h5 class="card-title">Consultivos</h5>
             <p class="card-text">Ejemplo de métodos Consultivos</p>
-            <a href="./solicitudes" class="card-link">Solicitudes</a>
-            <a href="./liquidaciones" class="card-link">Liquidaciones</a>
-            <a href="./posicion" class="card-link">Posición Cuotapartista</a>
-            <a href="./valorescp" class="card-link">Valores de Cuotaparte</a>
+
+            <router-link to="./solicitudes" class="card-link"
+              >Solicitudes</router-link
+            >
+            <router-link to="./liquidaciones" class="card-link"
+              >Liquidaciones</router-link
+            >
+            <router-link to="./posicion" class="card-link"
+              >Posición Cuotapartista</router-link
+            >
+            <router-link to="./valorescp" class="card-link"
+              >Valores de Cuotaparte</router-link
+            >
           </div>
         </div>
       </div>
@@ -64,8 +73,10 @@
               En esta sección encontrará ejemplos de consulta de la normativa de
               Paraguay
             </p>
-            <a href="./py/cartera" class="card-link">Composición de Cartera</a>
-            <!-- <a href="#" class="card-link">Another link</a> -->
+            <router-link to="./py/cartera" class="card-link"
+              >Composición de Cartera</router-link
+            >
+            <!-- <a href="./py/cartera" class="card-link">Composición de Cartera</a> -->
           </div>
         </div>
       </div>
@@ -83,10 +94,13 @@
               Debajo encontrará ejemplos de los métodos transaccionales de la
               API de Fondos
             </p>
-            <a href="./suscripcion" class="card-link"
-              >Solicitudes de Suscripción</a
+            <router-link to="./suscripcion" class="card-link"
+              >Solicitudes de Suscripcion</router-link
             >
-            <a href="./rescate" class="card-link">Solicitudes de Rescate</a>
+
+            <router-link to="./rescate" class="card-link"
+              >Solicitudes de Rescate</router-link
+            >
           </div>
         </div>
       </div>
