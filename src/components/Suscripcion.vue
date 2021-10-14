@@ -220,7 +220,6 @@ export default {
           headers: headerPost,
         })
         .then((res) => {
-          console.log(res);
           alert(
             "La solicitud " + res.data.codigo + " se ingresó satisfactoriamente"
           );
