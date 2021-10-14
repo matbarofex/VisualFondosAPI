@@ -58,13 +58,33 @@
           </td>
         </tr>
       </tbody>
-      
     </table>
   </div>
 </template>
 
 <script>
 import moment from "moment";
+import axios from "axios";
+
+const login = async () => {
+  const loginData = { userName: "sa", password: "sasa" };
+  const headerPost = {
+    "api-version": "3",
+    "Content-Type":
+      "application/json;odata.metadata=minimal;odata.streaming=true",
+    accept: "*/*",
+  };
+
+  const response = await axios.post(
+    "https://api.sistemasesco.com/api/fondos/v3/login",
+    loginData,
+    {
+      headers: headerPost,
+    }
+  );
+
+  return response.data.access_token;
+};
 
 export default {
   name: "Posicion",
@@ -82,32 +102,41 @@ export default {
       }
     },
     async getCuentas() {
+      const _token = await login();
       const headers = {
+        "api-version": "3",
+        "Content-Type":
+          "application/json;odata.metadata=minimal;odata.streaming=true",
         accept: "application/json;odata.metadata=minimal;odata.streaming=true",
-        "Content-Type": "application/json;",
-        "api-version": "2",
+        Authorization: "Bearer " + _token,
       };
-      // console.log(this.fecha.toString("dd/MM/yyyy"))
+
       const response = await fetch(
-        "https://api.sistemasesco.com/api/fondos/v2/reportes/posicionCuotapartista?fecha=2021-10-15&pageSize=150",
+        "https://api.sistemasesco.com/api/fondos/v3/reportes/posicionCuotapartista?fecha=2021-10-15&pageSize=150",
         { headers }
       );
       const data = await response.json();
       this.cuentas = data.data;
     },
     async getPosicion(event) {
+      const _token = await login();
       const headers = {
+        "api-version": "3",
+        "Content-Type":
+          "application/json;odata.metadata=minimal;odata.streaming=true",
         accept: "application/json;odata.metadata=minimal;odata.streaming=true",
-        "Content-Type": "application/json;",
-        "api-version": "2",
+        Authorization: "Bearer " + _token,
       };
       const response = await fetch(
-        "https://api.sistemasesco.com/api/fondos/v2/reportes/posicionCuotapartista?fecha=2021-10-15&pageSize=50&numCuotapartista=" +
+        "https://api.sistemasesco.com/api/fondos/v3/reportes/posicionCuotapartista?fecha=2021-10-15&pageSize=50&numCuotapartista=" +
           event.target.value,
         { headers }
       );
       const data = await response.json();
       this.cuentaSeleccionada = data.data;
+    },
+    getDate() {
+      return moment().format("YYYY-MM-DD");
     },
   },
   created() {

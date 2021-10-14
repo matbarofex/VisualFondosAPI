@@ -106,22 +106,27 @@
 import axios from "axios";
 import moment from "moment";
 
-const headersv2 = {
-  accept: "application/json;odata.metadata=minimal;odata.streaming=true",
-  "Content-Type": "application/json;",
-  "api-version": "2",
+const login = async () => {
+  const loginData = { userName: "sa", password: "sasa" };
+  const headerPost = {
+    "api-version": "3",
+    "Content-Type":
+      "application/json;odata.metadata=minimal;odata.streaming=true",
+    accept: "*/*",
+  };
+
+  const response = await axios.post(
+    "https://api.sistemasesco.com/api/fondos/v3/login",
+    loginData,
+    {
+      headers: headerPost,
+    }
+  );
+
+  return response.data.access_token;
 };
 
-const headers = {
-  accept: "application/json;odata.metadata=minimal;odata.streaming=true",
-  "Content-Type": "application/json;",
-  "api-version": "3",
-};
-
-const apiURL = "https://api.sistemasesco.com/api/fondos";
-// const apiURLv2 = "https://api.sistemasesco.com/api/fondos";
-
-const login = { userName: "sa", password: "sasa" };
+const apiURL = "https://api.sistemasesco.com/api/fondos/v3";
 
 export default {
   name: "Suscripcion",
@@ -144,12 +149,19 @@ export default {
   },
   methods: {
     async getCuentas() {
+      const _token = await login();
+      const headers = {
+        "api-version": "3",
+        "Content-Type":
+          "application/json;odata.metadata=minimal;odata.streaming=true",
+        accept: "application/json;odata.metadata=minimal;odata.streaming=true",
+        Authorization: "Bearer " + _token,
+      };
+
       const response = await fetch(
         apiURL +
-          "/v2/reportes/posicionCuotapartista?fecha=" +
-          this.getDate() +
-          "&pageSize=150",
-        { headers: headersv2 }
+          "/reportes/posicionCuotapartista?fecha=2021-10-15&pageSize=150",
+        { headers }
       );
       const data = await response.json();
 
@@ -158,10 +170,19 @@ export default {
       });
     },
     async getCuentaBancaria(cuotapartista) {
+      const _token = await login();
+      const headers = {
+        "api-version": "3",
+        "Content-Type":
+          "application/json;odata.metadata=minimal;odata.streaming=true",
+        accept: "application/json;odata.metadata=minimal;odata.streaming=true",
+        Authorization: "Bearer " + _token,
+      };
+
       this.cuentasBancarias = [];
       const response = await fetch(
         apiURL +
-          "/v3/get-cuotapartistas?numCuotapartista=" +
+          "/get-cuotapartistas?numCuotapartista=" +
           cuotapartista.target.value,
         { headers }
       );
@@ -178,12 +199,18 @@ export default {
       });
     },
     async getFondos() {
+      const _token = await login();
+      const headers = {
+        "api-version": "3",
+        "Content-Type":
+          "application/json;odata.metadata=minimal;odata.streaming=true",
+        accept: "application/json;odata.metadata=minimal;odata.streaming=true",
+        Authorization: "Bearer " + _token,
+      };
+
       const response = await fetch(
-        apiURL +
-          "/v2/reportes/valorCuotapartes?fecha=" +
-          this.getDate() +
-          "&pageSize=50",
-        { headers: headersv2 }
+        apiURL + "/reportes/valorCuotapartes?fecha=2015-10-10&pageSize=50",
+        { headers }
       );
       const data = await response.json();
 
@@ -194,7 +221,7 @@ export default {
           fondo.moneda,
         ]);
       });
-      console.log(this.$refs.sCuentaBancaria);
+      // console.log(this.$refs.sCuentaBancaria);
       this.$refs.sFondo.selected = 0;
       this.$refs.sCuotapartista.selected = 0;
       this.$refs.sCuentaBancaria.selected = 0;
@@ -209,7 +236,7 @@ export default {
         "0.",
         "TEST"
       );
-      this.suscripcion.fechaConcertacion = this.getDate();
+      this.suscripcion.fechaConcertacion = this.getDate;
     },
     insertSuscripcion(event) {
       const headerPost = {
@@ -221,7 +248,7 @@ export default {
       // console.log(this.suscripcion);
 
       axios
-        .post(apiURL + "/v3/insert-solicitud-suscripcion", this.suscripcion, {
+        .post(apiURL + "/insert-solicitud-suscripcion", this.suscripcion, {
           headers: headerPost,
         })
         .then((res) => {
@@ -235,10 +262,8 @@ export default {
           this.sCuentaBancaria.selected = undefined;
         })
         .catch((error) => {
-          console.log(error.response);
-        })
-        .finally(() => {
-          //Perform action in always
+          alert(error.response.data.error.Msj);
+          // console.log(error.response.data.error);
         });
     },
     getDate() {

@@ -61,6 +61,27 @@
 
 <script>
 import moment from "moment";
+import axios from "axios";
+
+const login = async () => {
+  const loginData = { userName: "sa", password: "sasa" };
+  const headerPost = {
+    "api-version": "3",
+    "Content-Type":
+      "application/json;odata.metadata=minimal;odata.streaming=true",
+    accept: "*/*",
+  };
+
+  const response = await axios.post(
+    "https://api.sistemasesco.com/api/fondos/v3/login",
+    loginData,
+    {
+      headers: headerPost,
+    }
+  );
+
+  return response.data.access_token;
+};
 
 export default {
   name: "Liquidaciones",
@@ -79,14 +100,17 @@ export default {
   },
   methods: {
     async getLiquidaciones() {
+      const _token = await login();
       const headers = {
+        "api-version": "3",
+        "Content-Type":
+          "application/json;odata.metadata=minimal;odata.streaming=true",
         accept: "application/json;odata.metadata=minimal;odata.streaming=true",
-        "Content-Type": "application/json;",
-        "api-version": "2",
+        Authorization: "Bearer " + _token,
       };
 
       const response = await fetch(
-        "https://api.sistemasesco.com/api/fondos/v2/reportes/liquidaciones?fechaDesde=2017-04-01&fechaHasta=2017-05-01&pageSize=15&pageNumber=" +
+        "https://api.sistemasesco.com/api/fondos/v3/reportes/liquidaciones?fechaDesde=2017-04-01&fechaHasta=2017-05-01&pageSize=15&pageNumber=" +
           this.page,
         { headers }
       );

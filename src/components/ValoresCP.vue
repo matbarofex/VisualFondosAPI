@@ -48,6 +48,27 @@
 
 <script>
 import moment from "moment";
+import axios from "axios";
+
+const login = async () => {
+  const loginData = { userName: "sa", password: "sasa" };
+  const headerPost = {
+    "api-version": "3",
+    "Content-Type":
+      "application/json;odata.metadata=minimal;odata.streaming=true",
+    accept: "*/*",
+  };
+
+  const response = await axios.post(
+    "https://api.sistemasesco.com/api/fondos/v3/login",
+    loginData,
+    {
+      headers: headerPost,
+    }
+  );
+
+  return response.data.access_token;
+};
 
 export default {
   name: "ValoresCP",
@@ -58,14 +79,19 @@ export default {
   },
   methods: {
     async getVCP() {
+      const _token = await login();
       const headers = {
+        "api-version": "3",
+        "Content-Type":
+          "application/json;odata.metadata=minimal;odata.streaming=true",
         accept: "application/json;odata.metadata=minimal;odata.streaming=true",
-        "Content-Type": "application/json;",
-        "api-version": "2",
+        Authorization: "Bearer " + _token,
       };
 
       const response = await fetch(
-        "https://api.sistemasesco.com/api/fondos/v2/reportes/valorCuotapartes?fecha=2021-10-15&pageSize=50",
+        "https://api.sistemasesco.com/api/fondos/v3/reportes/valorCuotapartes?fecha=" +
+          this.getDate() +
+          "&pageSize=50",
         { headers }
       );
       const data = await response.json();
@@ -75,6 +101,9 @@ export default {
       if (value) {
         return moment(String(value)).format("DD/MM/YYYY");
       }
+    },
+    getDate() {
+      return moment().format("YYYY-MM-DD");
     },
   },
   created() {

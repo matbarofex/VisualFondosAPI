@@ -178,57 +178,64 @@
     </form>
   </div>
 
-  <div class="mb-8" v-if="cuentaSeleccionada.length > 0">
-   <table class="table table-striped">
-    <thead>
-      <tr>
-        <th scope="col">#</th>
-        <th scope="col">Solicitud</th>
-        <th scope="col">Fondo</th>
-        <th scope="col">Fecha Concertacion</th>
-        <th scope="col">Fecha Liquidación</th>
-        <th scope="col">Moneda</th>
-        <th scope="col">Importe/Cuotapartes</th>
-        <th scope="col">Cuotapartista</th>
-      </tr>
-    </thead>
-    <tbody>
-      <tr v-for="sol in this.solicitudes" :key="sol.idSolicitud">
-        <th scope="row">{{ sol.numero }}</th>
-        <td>{{ sol.tipo.descripcion }}</td>
-        <td>
-          Fondo {{ sol.fondo.numFondo }} -
-          {{ sol.tipoValorCuotaparte.descripcion }}
-        </td>
-        <td>{{ format_date(sol.fechaConcertacion) }}</td>
-        <td>{{ format_date(sol.fechaLiquidacion) }}</td>
-        <td>{{ sol.moneda.simbolo }}</td>
-        <td>{{ sol.importe.toLocaleString() }}</td>
-        <td>Cuenta {{ sol.cuotapartista.numero }}</td>
-      </tr>
-    </tbody>
-  </table>
-  </div>
+  <!-- <div class="mb-8" v-if="cuentaSeleccionada.length > 0" style="width:850px">
+    <table class="table table-striped">
+      <thead>
+        <tr>
+          <th scope="col">#</th>
+          <th scope="col">Solicitud</th>
+          <th scope="col">Fondo</th>
+          <th scope="col">Fecha Concertacion</th>
+          <th scope="col">Moneda</th>
+          <th scope="col">Importe</th>
+          <th scope="col">Cuotapartes</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr v-for="sol in this.solicitudes" :key="sol.idSolicitud">
+          <th scope="row">{{ sol.numero }}</th>
+          <td>{{ sol.tipo.descripcion }}</td>
+          <td>
+            Fondo {{ sol.fondo.numFondo }} -
+            {{ sol.tipoValorCuotaparte.descripcion }}
+          </td>
+          <td>{{ format_date(sol.fechaConcertacion) }}</td>
+          <td>{{ sol.moneda.simbolo }}</td>
+          <td>{{ sol.importe.toLocaleString() }}</td>
+          <td>
+            {{ sol.cantidadCuotapartes }}
+          </td>
+        </tr>
+      </tbody>
+    </table>
+  </div> -->
 </template>
 
 <script>
 import axios from "axios";
 import moment from "moment";
 
-const headersv2 = {
-  accept: "application/json;odata.metadata=minimal;odata.streaming=true",
-  "Content-Type": "application/json;",
-  "api-version": "2",
+const login = async () => {
+  const loginData = { userName: "sa", password: "sasa" };
+  const headerPost = {
+    "api-version": "3",
+    "Content-Type":
+      "application/json;odata.metadata=minimal;odata.streaming=true",
+    accept: "*/*",
+  };
+
+  const response = await axios.post(
+    "https://api.sistemasesco.com/api/fondos/v3/login",
+    loginData,
+    {
+      headers: headerPost,
+    }
+  );
+
+  return response.data.access_token;
 };
 
-const headers = {
-  accept: "application/json;odata.metadata=minimal;odata.streaming=true",
-  "Content-Type": "application/json;",
-  "api-version": "3",
-};
-
-const apiURL = "https://api.sistemasesco.com/api/fondos";
-// const apiURLv2 = "https://api.sistemasesco.com/api/fondos/v2";
+const apiURL = "https://api.sistemasesco.com/api/fondos/v3";
 
 export default {
   name: "Rescate",
@@ -251,18 +258,28 @@ export default {
       cuentasBancarias: [],
       cuentaSeleccionada: [],
       fondos: [],
+      solicitudes: [{}],
       moneda: "",
     };
   },
   methods: {
     async getCuentas() {
       // Obtiene la lista de cuotapartistas disponibles en la base de datos
+      const _token = await login();
+      const headers = {
+        "api-version": "3",
+        "Content-Type":
+          "application/json;odata.metadata=minimal;odata.streaming=true",
+        accept: "application/json;odata.metadata=minimal;odata.streaming=true",
+        Authorization: "Bearer " + _token,
+      };
+
       const response = await fetch(
         apiURL +
-          "/v2/reportes/posicionCuotapartista?fecha=" +
+          "/reportes/posicionCuotapartista?fecha=" +
           this.getDate() +
           "&pageSize=150",
-        { headers: headersv2 }
+        { headers }
       );
       const data = await response.json();
 
@@ -272,10 +289,19 @@ export default {
     },
     async getCuentaBancaria(cuotapartista) {
       // Consulta las cuentas bancarias del cuotapartista seleccionado
+      const _token = await login();
+      const headers = {
+        "api-version": "3",
+        "Content-Type":
+          "application/json;odata.metadata=minimal;odata.streaming=true",
+        accept: "application/json;odata.metadata=minimal;odata.streaming=true",
+        Authorization: "Bearer " + _token,
+      };
+
       this.cuentasBancarias = [];
       const response = await fetch(
         apiURL +
-          "/v3/get-cuotapartistas?numCuotapartista=" +
+          "/get-cuotapartistas?numCuotapartista=" +
           cuotapartista.target.value,
         { headers }
       );
@@ -292,17 +318,54 @@ export default {
     },
     async getPosicion(event) {
       // Obtiene la posición del cuotapartista seleccionado
+
+      const _token = await login();
+      const headers = {
+        "api-version": "3",
+        "Content-Type":
+          "application/json;odata.metadata=minimal;odata.streaming=true",
+        accept: "application/json;odata.metadata=minimal;odata.streaming=true",
+        Authorization: "Bearer " + _token,
+      };
+
       const response = await fetch(
         apiURL +
-          "/v2/reportes/posicionCuotapartista?fecha=" +
+          "/reportes/posicionCuotapartista?fecha=" +
           this.getDate() +
           "&pageSize=50&numCuotapartista=" +
           event.target.value,
-        { headers: headersv2 }
+        { headers }
       );
       const data = await response.json();
       this.cuentaSeleccionada = data.data;
     },
+    // async getSolicitudes(event) {
+    //   const _token = await login();
+    //   const headers = {
+    //     "api-version": "3",
+    //     "Content-Type":
+    //       "application/json;odata.metadata=minimal;odata.streaming=true",
+    //     accept: "application/json;odata.metadata=minimal;odata.streaming=true",
+    //     Authorization: "Bearer " + _token,
+    //   };
+
+    //   axios
+    //     .get(
+    //       "https://api.sistemasesco.com/api/fondos/v3/reportes/solicitudes?fechaDesde=" +
+    //         this.getDate() +
+    //         "&fechaHasta=" +
+    //         this.getDate() +
+    //         "&pageSize=15&pageNumber=1&NumCuotapartista=" +
+    //         event.target.value,
+    //       { headers }
+    //     )
+    //     .then((response) => {
+    //       this.solicitudes = response.data.data;
+    //     })
+    //     .catch((e) => {
+    //       console.log(e);
+    //     });
+    // },
     async setDataFondo(event) {
       // Setea las variables de la operación al momento de seleccion del fondo
       const fondoClase = event.target.value.split("_");
@@ -319,12 +382,14 @@ export default {
       this.rescate.cantidadCuotapartes = this.cuotapartesTotal;
       this.rescate.importe = 0;
       this.rescate.esTotal = true;
+      this.rescate.esRescateImporte = false;
     },
     async setParcial() {
       // Setea si la solicitud es parcial
       this.rescate.cantidadCuotapartes = 0;
       this.rescate.importe = 0;
       this.rescate.esTotal = false;
+      this.rescate.esRescateImporte = true;
     },
     insertRescate(event) {
       // Inserta la solicitud de rescate en la base de datos
@@ -337,7 +402,7 @@ export default {
       console.log(this.rescate);
 
       axios
-        .post(apiURL + "/v3/insert-solicitud-rescate", this.rescate, {
+        .post(apiURL + "/insert-solicitud-rescate", this.rescate, {
           headers: headerPost,
         })
         .then((res) => {
@@ -356,12 +421,13 @@ export default {
           this.rescate = [];
         })
         .catch((error) => {
-          console.log(error.response);
-          // alert(error.response.data.error.Msj);
-        })
-        .finally(() => {
-          //Perform action in always
+          alert(error.response.data.error.Msj);
         });
+    },
+    format_date(value) {
+      if (value) {
+        return moment(String(value)).format("DD/MM/YYYY");
+      }
     },
     getDate() {
       return moment().format("YYYY-MM-DD");

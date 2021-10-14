@@ -1,6 +1,6 @@
 <template>
   <h1>Solicitudes</h1>
-  <table class="table table-striped">
+  <table class="table">
     <thead>
       <tr>
         <th scope="col">#</th>
@@ -57,6 +57,27 @@
 
 <script>
 import moment from "moment";
+import axios from "axios";
+
+const login = async () => {
+  const loginData = { userName: "sa", password: "sasa" };
+  const headerPost = {
+    "api-version": "3",
+    "Content-Type":
+      "application/json;odata.metadata=minimal;odata.streaming=true",
+    accept: "*/*",
+  };
+
+  const response = await axios.post(
+    "https://api.sistemasesco.com/api/fondos/v3/login",
+    loginData,
+    {
+      headers: headerPost,
+    }
+  );
+
+  return response.data.access_token;
+};
 
 export default {
   name: "Solicitudes",
@@ -71,34 +92,41 @@ export default {
       previousPageNumber: 1,
       totalPages: 98,
       totalItems: 975,
+      token: "",
     };
   },
   methods: {
     async getSolicitudes() {
+      const _token = await login();
       const headers = {
+        "api-version": "3",
+        "Content-Type":
+          "application/json;odata.metadata=minimal;odata.streaming=true",
         accept: "application/json;odata.metadata=minimal;odata.streaming=true",
-        "Content-Type": "application/json;",
-        "api-version": "2",
+        Authorization: "Bearer " + _token,
       };
 
-      fetch(
-        "https://api.sistemasesco.com/api/fondos/v2/reportes/solicitudes?fechaDesde=2020-04-27&fechaHasta=" +
-          this.getDate() +
-          "&pageSize=15&pageNumber=" +
-          this.page,
-        { headers }
-      )
-        .then((response) => response.json())
-        .then((data) => {
-          (this.page = data.pageNumber),
-            (this.hasPreviousPage = data.hasPreviousPage);
-          this.hasNextPage = data.hasNextPage;
-          this.nextPageNumber = data.nextPageNumber;
-          this.pageSize = data.pageSize;
-          this.previousPageNumber = data.previousPageNumber;
-          this.totalPages = data.totalPages;
-          this.totalItems = data.totalItems;
-          this.solicitudes = data.data;
+      axios
+        .get(
+          "https://api.sistemasesco.com/api/fondos/v3/reportes/solicitudes?fechaDesde=2020-04-27&fechaHasta=" +
+            this.getDate() +
+            "&pageSize=15&pageNumber=" +
+            this.page,
+          { headers }
+        )
+        .then((response) => {
+          (this.page = response.data.pageNumber),
+            (this.hasPreviousPage = response.data.hasPreviousPage);
+          this.hasNextPage = response.data.hasNextPage;
+          this.nextPageNumber = response.data.nextPageNumber;
+          this.pageSize = response.data.pageSize;
+          this.previousPageNumber = response.data.previousPageNumber;
+          this.totalPages = response.data.totalPages;
+          this.totalItems = response.data.totalItems;
+          this.solicitudes = response.data.data;
+        })
+        .catch((e) => {
+          console.log(e);
         });
     },
     changePage(page) {
@@ -115,6 +143,7 @@ export default {
     },
   },
   created() {
+    // this.token = this.login();
     this.getSolicitudes();
   },
 };
