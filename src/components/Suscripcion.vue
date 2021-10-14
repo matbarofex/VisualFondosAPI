@@ -118,8 +118,8 @@ const headers = {
   "api-version": "3",
 };
 
-const apiURL = "http://192.168.22.14:6003/api/fondos/v3";
-const apiURLv2 = "https://api.sistemasesco.com/api/fondos/v2";
+const apiURL = "https://api.sistemasesco.com/api/fondos";
+// const apiURLv2 = "https://api.sistemasesco.com/api/fondos";
 
 const login = { userName: "sa", password: "sasa" };
 
@@ -145,8 +145,10 @@ export default {
   methods: {
     async getCuentas() {
       const response = await fetch(
-        apiURLv2 +
-          "/reportes/posicionCuotapartista?fecha=2021-10-15&pageSize=150",
+        apiURL +
+          "/v2/reportes/posicionCuotapartista?fecha=" +
+          this.getDate() +
+          "&pageSize=150",
         { headers: headersv2 }
       );
       const data = await response.json();
@@ -159,7 +161,7 @@ export default {
       this.cuentasBancarias = [];
       const response = await fetch(
         apiURL +
-          "/get-cuotapartistas?numCuotapartista=" +
+          "/v3/get-cuotapartistas?numCuotapartista=" +
           cuotapartista.target.value,
         { headers }
       );
@@ -177,7 +179,10 @@ export default {
     },
     async getFondos() {
       const response = await fetch(
-        apiURLv2 + "/reportes/valorCuotapartes?fecha=2015-10-10&pageSize=50",
+        apiURL +
+          "/v2/reportes/valorCuotapartes?fecha=" +
+          this.getDate() +
+          "&pageSize=50",
         { headers: headersv2 }
       );
       const data = await response.json();
@@ -204,7 +209,7 @@ export default {
         "0.",
         "TEST"
       );
-      this.suscripcion.fechaConcertacion = "2021-10-13";
+      this.suscripcion.fechaConcertacion = this.getDate();
     },
     insertSuscripcion(event) {
       const headerPost = {
@@ -213,10 +218,10 @@ export default {
           "application/json;odata.metadata=minimal;odata.streaming=true",
         accept: "application/json;odata.metadata=minimal;odata.streaming=true",
       };
-      console.log(this.suscripcion);
+      // console.log(this.suscripcion);
 
       axios
-        .post(apiURL + "/insert-solicitud-suscripcion", this.suscripcion, {
+        .post(apiURL + "/v3/insert-solicitud-suscripcion", this.suscripcion, {
           headers: headerPost,
         })
         .then((res) => {
@@ -235,6 +240,9 @@ export default {
         .finally(() => {
           //Perform action in always
         });
+    },
+    getDate() {
+      return moment().format("YYYY-MM-DD");
     },
   },
   created() {

@@ -21,6 +21,9 @@
           name="sCuotapartista"
           ref="sCuotapartista"
         >
+          <option value="0" selected="selected"
+            >Seleccione una cuenta cuotapartista</option
+          >
           <option
             v-for="cuenta in cuentas"
             :key="cuenta.numero"
@@ -68,7 +71,7 @@
           required
           name="sFondo"
           ref="sFondo"
-          v-on:change="getMoneda($event)"
+          v-on:change="setDataFondo($event)"
         >
           <option>Seleccione un fondo</option>
           <option
@@ -107,6 +110,9 @@
           name="sCuentaBancaria"
           ref="sCuentaBancaria"
         >
+          <option value="0" selected="selected"
+            >Seleccione una cuenta bancaria</option
+          >
           <option
             v-for="cuenta in cuentasBancarias"
             :key="cuenta[0]"
@@ -123,7 +129,8 @@
           id="cParcial"
           autocomplete="off"
           checked
-          v-on:change="setParcial($event)"
+          v-on:change="setParcial()"
+          ref="cParcial"
         />
         <label class="btn btn-outline-primary" for="cParcial">Parcial</label>
 
@@ -133,7 +140,7 @@
           name="group1"
           id="cTotal"
           autocomplete="off"
-          v-on:change="setTotal($event)"
+          v-on:change="setTotal()"
         />
         <label class="btn btn-outline-primary" for="cTotal">Total</label>
       </div>
@@ -170,10 +177,43 @@
       </div>
     </form>
   </div>
+
+  <div class="mb-8" v-if="cuentaSeleccionada.length > 0">
+   <table class="table table-striped">
+    <thead>
+      <tr>
+        <th scope="col">#</th>
+        <th scope="col">Solicitud</th>
+        <th scope="col">Fondo</th>
+        <th scope="col">Fecha Concertacion</th>
+        <th scope="col">Fecha Liquidación</th>
+        <th scope="col">Moneda</th>
+        <th scope="col">Importe/Cuotapartes</th>
+        <th scope="col">Cuotapartista</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr v-for="sol in this.solicitudes" :key="sol.idSolicitud">
+        <th scope="row">{{ sol.numero }}</th>
+        <td>{{ sol.tipo.descripcion }}</td>
+        <td>
+          Fondo {{ sol.fondo.numFondo }} -
+          {{ sol.tipoValorCuotaparte.descripcion }}
+        </td>
+        <td>{{ format_date(sol.fechaConcertacion) }}</td>
+        <td>{{ format_date(sol.fechaLiquidacion) }}</td>
+        <td>{{ sol.moneda.simbolo }}</td>
+        <td>{{ sol.importe.toLocaleString() }}</td>
+        <td>Cuenta {{ sol.cuotapartista.numero }}</td>
+      </tr>
+    </tbody>
+  </table>
+  </div>
 </template>
 
 <script>
 import axios from "axios";
+import moment from "moment";
 
 const headersv2 = {
   accept: "application/json;odata.metadata=minimal;odata.streaming=true",
@@ -187,8 +227,8 @@ const headers = {
   "api-version": "3",
 };
 
-const apiURL = "http://192.168.22.14:6003/api/fondos/v3";
-const apiURLv2 = "https://api.sistemasesco.com/api/fondos/v2";
+const apiURL = "https://api.sistemasesco.com/api/fondos";
+// const apiURLv2 = "https://api.sistemasesco.com/api/fondos/v2";
 
 export default {
   name: "Rescate",
@@ -216,9 +256,12 @@ export default {
   },
   methods: {
     async getCuentas() {
+      // Obtiene la lista de cuotapartistas disponibles en la base de datos
       const response = await fetch(
-        apiURLv2 +
-          "/reportes/posicionCuotapartista?fecha=2021-10-15&pageSize=150",
+        apiURL +
+          "/v2/reportes/posicionCuotapartista?fecha=" +
+          this.getDate() +
+          "&pageSize=150",
         { headers: headersv2 }
       );
       const data = await response.json();
@@ -226,19 +269,17 @@ export default {
       data.data.forEach((cuenta) => {
         this.cuentas.push(cuenta.cuotapartista);
       });
-      this.$refs.sCuotapartista.selected = 0;
     },
     async getCuentaBancaria(cuotapartista) {
+      // Consulta las cuentas bancarias del cuotapartista seleccionado
       this.cuentasBancarias = [];
       const response = await fetch(
         apiURL +
-          "/get-cuotapartistas?numCuotapartista=" +
+          "/v3/get-cuotapartistas?numCuotapartista=" +
           cuotapartista.target.value,
         { headers }
       );
       const data = await response.json();
-      console.log(data);
-      // this.cuentasBancarias = data.data[0].cuentasBancarias;
       data.data[0].cuentasBancarias.forEach((cuenta) => {
         if (cuenta.moneda.codISO === "ARS") {
           this.cuentasBancarias.push([
@@ -250,36 +291,43 @@ export default {
       });
     },
     async getPosicion(event) {
+      // Obtiene la posición del cuotapartista seleccionado
       const response = await fetch(
-        apiURLv2 +
-          "/reportes/posicionCuotapartista?fecha=2021-10-15&pageSize=50&numCuotapartista=" +
+        apiURL +
+          "/v2/reportes/posicionCuotapartista?fecha=" +
+          this.getDate() +
+          "&pageSize=50&numCuotapartista=" +
           event.target.value,
         { headers: headersv2 }
       );
       const data = await response.json();
       this.cuentaSeleccionada = data.data;
     },
-    async getMoneda(event) {
+    async setDataFondo(event) {
+      // Setea las variables de la operación al momento de seleccion del fondo
       const fondoClase = event.target.value.split("_");
 
       this.moneda = fondoClase[2];
       this.rescate.numFondo = fondoClase[0];
       this.rescate.clase = fondoClase[1];
       this.rescate.idSolicitud = String(Math.random()).replace("0.", "TEST");
-      this.rescate.fechaConcertacion = "2021-10-15";
+      this.rescate.fechaConcertacion = this.getDate();
       this.cuotapartesTotal = fondoClase[3];
     },
-    async setTotal(event) {
+    async setTotal() {
+      // Setea si la solicitud es total
       this.rescate.cantidadCuotapartes = this.cuotapartesTotal;
       this.rescate.importe = 0;
       this.rescate.esTotal = true;
     },
-    async setParcial(event) {
+    async setParcial() {
+      // Setea si la solicitud es parcial
       this.rescate.cantidadCuotapartes = 0;
       this.rescate.importe = 0;
       this.rescate.esTotal = false;
     },
     insertRescate(event) {
+      // Inserta la solicitud de rescate en la base de datos
       const headerPost = {
         "api-version": "3",
         "Content-Type":
@@ -289,7 +337,7 @@ export default {
       console.log(this.rescate);
 
       axios
-        .post(apiURL + "/insert-solicitud-rescate", this.rescate, {
+        .post(apiURL + "/v3/insert-solicitud-rescate", this.rescate, {
           headers: headerPost,
         })
         .then((res) => {
@@ -302,14 +350,21 @@ export default {
           this.sFondo.selected = undefined;
           this.sCuotapartista.selected = undefined;
           this.sCuentaBancaria.selected = undefined;
+          this.setParcial();
+          this.cuentaSeleccionada = [];
+          this.$refs.cParcial.checked = true;
+          this.rescate = [];
         })
         .catch((error) => {
           console.log(error.response);
-          alert(error.response.data.error.Msj);
+          // alert(error.response.data.error.Msj);
         })
         .finally(() => {
           //Perform action in always
         });
+    },
+    getDate() {
+      return moment().format("YYYY-MM-DD");
     },
   },
   created() {

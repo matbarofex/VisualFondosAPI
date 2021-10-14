@@ -82,7 +82,9 @@ export default {
       };
 
       fetch(
-        "https://api.sistemasesco.com/api/fondos/v2/reportes/solicitudes?fechaDesde=2020-04-27&fechaHasta=2021-09-27&pageSize=15&pageNumber=" +
+        "https://api.sistemasesco.com/api/fondos/v2/reportes/solicitudes?fechaDesde=2020-04-27&fechaHasta=" +
+          this.getDate() +
+          "&pageSize=15&pageNumber=" +
           this.page,
         { headers }
       )
@@ -107,6 +109,9 @@ export default {
       if (value) {
         return moment(String(value)).format("DD/MM/YYYY");
       }
+    },
+    getDate() {
+      return moment().format("YYYY-MM-DD");
     },
   },
   created() {
