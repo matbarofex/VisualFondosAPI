@@ -234,7 +234,7 @@ export default {
         "0.",
         "TEST"
       );
-      this.suscripcion.fechaConcertacion = this.getDate;
+      this.suscripcion.fechaConcertacion = this.getDate();
     },
     insertSuscripcion(event) {
       const headerPost = {
