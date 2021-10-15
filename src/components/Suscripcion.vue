@@ -189,13 +189,11 @@ export default {
       const data = await response.json();
       // this.cuentasBancarias = data.data[0].cuentasBancarias;
       data.data[0].cuentasBancarias.forEach((cuenta) => {
-        if (cuenta.moneda.codISO === "ARS") {
-          this.cuentasBancarias.push([
-            cuenta.idCptCuentaBancaria,
-            cuenta.numeroCuenta,
-            cuenta.moneda.codISO,
-          ]);
-        }
+        this.cuentasBancarias.push([
+          cuenta.idCptCuentaBancaria,
+          cuenta.numeroCuenta,
+          cuenta.moneda.simbolo,
+        ]);
       });
     },
     async getFondos() {

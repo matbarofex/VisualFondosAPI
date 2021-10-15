@@ -214,6 +214,7 @@
 <script>
 import axios from "axios";
 import moment from "moment";
+const apiURL = "https://api.sistemasesco.com/api/fondos/v3";
 
 const login = async () => {
   const loginData = { userName: "sa", password: "sasa" };
@@ -224,18 +225,12 @@ const login = async () => {
     accept: "*/*",
   };
 
-  const response = await axios.post(
-    "https://api.sistemasesco.com/api/fondos/v3/login",
-    loginData,
-    {
-      headers: headerPost,
-    }
-  );
+  const response = await axios.post(apiURL + "/login", loginData, {
+    headers: headerPost,
+  });
 
   return response.data.access_token;
 };
-
-const apiURL = "https://api.sistemasesco.com/api/fondos/v3";
 
 export default {
   name: "Rescate",
@@ -306,14 +301,16 @@ export default {
         { headers }
       );
       const data = await response.json();
+
+      console.log(data);
+
       data.data[0].cuentasBancarias.forEach((cuenta) => {
-        if (cuenta.moneda.codISO === "ARS") {
-          this.cuentasBancarias.push([
-            cuenta.idCptCuentaBancaria,
-            cuenta.numeroCuenta,
-            cuenta.moneda.codISO,
-          ]);
-        }
+        this.cuentasBancarias.push([
+          cuenta.idCptCuentaBancaria,
+          cuenta.numeroCuenta,
+          cuenta.moneda.simbolo,
+        ]);
+        console.log(this.cuentasBancarias);
       });
     },
     async getPosicion(event) {

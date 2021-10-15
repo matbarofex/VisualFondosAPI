@@ -9,6 +9,7 @@ import Cartera from '@/components/PY/Cartera.vue'
 import Participes from '@/components/PY/Participes.vue'
 import SolicitudesPY from '@/components/PY/Solicitudes.vue'
 import Valorizacion from '@/components/PY/Valorizacion.vue'
+import ejemplo from '@/components/ejemplo.vue'
 import { createWebHistory, createRouter } from "vue-router";
 
 const routes = [
@@ -22,7 +23,8 @@ const routes = [
   { path: '/py/cartera', component: Cartera, name:'Cartera' },
   { path: '/py/participes', component: Participes, name:'Participes' },
   { path: '/py/solicitudes', component: SolicitudesPY, name:'SolicitudesPY' },
-  { path: '/py/valorizacion', component: Valorizacion, name:'Valorizacion' }
+  { path: '/py/valorizacion', component: Valorizacion, name:'Valorizacion' },
+  { path: '/ejemplo', component: ejemplo, name:'ejemplo' }
 ]
 
 const router = createRouter({
